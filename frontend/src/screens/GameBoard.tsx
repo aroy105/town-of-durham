@@ -1,18 +1,24 @@
 import type { JoinedPlayer, StateMessage } from '../types/messages'
 
-type LobbyScreenProps = {
+type GameBoardProps = {
   me: JoinedPlayer
   state: StateMessage | null
   isHost: boolean
-  onStartGame: () => void
+  onAdvancePhase: () => void
 }
 
-export function LobbyScreen({ me, state, isHost, onStartGame }: LobbyScreenProps) {
+function phaseLabel(state: StateMessage | null): string {
+  if (state === null) return '...'
+  if (state.phase === 'night') return `Night ${state.day_number}`
+  return `Day ${state.day_number}`
+}
+
+export function GameBoard({ me, state, isHost, onAdvancePhase }: GameBoardProps) {
   const players = state?.players ?? []
 
   return (
     <div style={{ textAlign: 'left', padding: '0 24px' }}>
-      <h1>Lobby</h1>
+      <h1>{phaseLabel(state)}</h1>
       <p>You are: {me.display_name}</p>
       <div
         style={{
@@ -31,8 +37,8 @@ export function LobbyScreen({ me, state, isHost, onStartGame }: LobbyScreenProps
         ))}
       </div>
       {isHost && (
-        <button style={{ marginTop: 12 }} onClick={onStartGame}>
-          Start Game
+        <button style={{ marginTop: 12 }} onClick={onAdvancePhase}>
+          Advance Phase
         </button>
       )}
     </div>

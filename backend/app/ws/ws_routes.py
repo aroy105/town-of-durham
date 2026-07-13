@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from app.game.engine import PhaseError, advance_phase
 from app.game.state import game_state
 from app.ws.connection_manager import ConnectionManager
 
@@ -7,8 +8,8 @@ router = APIRouter()
 manager = ConnectionManager()
 
 
-async def broadcast_player_list() -> None:
-    await manager.broadcast({"type": "player_list", "players": game_state.public_player_list()})
+async def broadcast_state() -> None:
+    await manager.broadcast(game_state.public_state())
 
 
 @router.websocket("/ws/{token}")
@@ -21,12 +22,18 @@ async def websocket_endpoint(websocket: WebSocket, token: str) -> None:
 
     await manager.connect(token, websocket)
     player.connected = True
-    await broadcast_player_list()
+    await broadcast_state()
 
     try:
         while True:
-            await websocket.receive_json()
+            data = await websocket.receive_json()
+            if data.get("type") == "advance_phase":
+                try:
+                    advance_phase(game_state, token)
+                except PhaseError:
+                    continue
+                await broadcast_state()
     except WebSocketDisconnect:
         manager.disconnect(token)
         player.connected = False
-        await broadcast_player_list()
+        await broadcast_state()

@@ -17,5 +17,11 @@ class ConnectionManager:
             await websocket.send_json(message)
 
     async def broadcast(self, message: dict) -> None:
-        for websocket in self.active_connections.values():
-            await websocket.send_json(message)
+        stale_ids = []
+        for client_id, websocket in self.active_connections.items():
+            try:
+                await websocket.send_json(message)
+            except Exception:
+                stale_ids.append(client_id)
+        for client_id in stale_ids:
+            self.active_connections.pop(client_id, None)

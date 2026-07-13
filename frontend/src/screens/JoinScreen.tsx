@@ -1,10 +1,5 @@
 import { useState } from 'react'
-
-type JoinedPlayer = {
-  token: string
-  player_id: string
-  display_name: string
-}
+import type { JoinedPlayer } from '../types/messages'
 
 type JoinScreenProps = {
   onJoined: (player: JoinedPlayer) => void
