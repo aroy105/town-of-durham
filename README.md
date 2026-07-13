@@ -1,0 +1,1 @@
+Run ./dev.sh to start server.
